@@ -16,11 +16,17 @@ class _HomeRouteState extends State<HomeRoute> {
   var newNote;
   @override
   Widget build(BuildContext context) {
-    getNotes();
     return Scaffold(
       appBar: AppBar(
         title: Text('Home'),
         actions: [
+          IconButton(
+            icon:Icon(Icons.sync),
+            onPressed: (){
+              //getNotes();
+              getNoteStream();
+            },
+          ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () {
@@ -75,7 +81,7 @@ class _HomeRouteState extends State<HomeRoute> {
 
   getNotes() async {
     var noteSnapShot =
-        await _firestore.collection('Notes').orderBy('time').getDocuments();
+        await _firestore.collection('Notes').getDocuments();
     noteList = [];
     var user = await _auth.currentUser();
     var userId = user.uid;
@@ -89,5 +95,13 @@ class _HomeRouteState extends State<HomeRoute> {
       });
       print(element.data);
     });
+  }
+
+  getNoteStream() async{
+    await for (var snapshot in _firestore.collection('Notes').snapshots()){
+      snapshot.documents.forEach((element) {
+        print(element.data);
+      });
+    }
   }
 }
