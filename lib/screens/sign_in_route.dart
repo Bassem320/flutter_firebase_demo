@@ -18,6 +18,7 @@ class _SignInRouteState extends State<SignInRoute> {
 
   @override
   Widget build(BuildContext context) {
+    skipLogin();
     return Scaffold(
       appBar: AppBar(
         title: Text('Sign Up'),
@@ -73,5 +74,11 @@ class _SignInRouteState extends State<SignInRoute> {
         ),
       ),
     );
+  }
+  skipLogin() async{
+    var user = await _auth.currentUser();
+    if(user != null){
+      Navigator.pushNamed(context, HomeRoute.home_route);
+    }
   }
 }

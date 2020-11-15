@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 class HomeRoute extends StatefulWidget {
@@ -12,6 +13,7 @@ class HomeRoute extends StatefulWidget {
 class _HomeRouteState extends State<HomeRoute> {
   final _auth = FirebaseAuth.instance;
   final _firestore = Firestore.instance;
+  final dbReference = FirebaseDatabase.instance.reference();
   var noteList = [];
   var newNote;
   @override
@@ -70,6 +72,7 @@ class _HomeRouteState extends State<HomeRoute> {
                     'note': newNote,
                     'time': timeStamp
                   });
+                  deleteNote();
                 },
               )
             ],
@@ -103,5 +106,23 @@ class _HomeRouteState extends State<HomeRoute> {
         print(element.data);
       });
     }
+  }
+
+  setNote(note){
+    dbReference.child('Notes').set({'note':note});
+  }
+  
+  readNotes(){
+    dbReference.once().then((dataSnapShot){
+      print(dataSnapShot.value);
+    });
+  }
+
+  updateNotes(note){
+    dbReference.child('Notes').update({'note':note});
+  }
+
+  deleteNote(){
+    dbReference.child('Notes').remove();
   }
 }
