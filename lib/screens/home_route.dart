@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HomeRoute extends StatefulWidget {
   static final String home_route = '/home';
@@ -18,67 +19,72 @@ class _HomeRouteState extends State<HomeRoute> {
   var newNote;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Home'),
-        actions: [
-          IconButton(
-            icon:Icon(Icons.sync),
-            onPressed: (){
-              //getNotes();
-              getNoteStream();
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () {
-              _auth.signOut();
-              Navigator.pop(context);
-            },
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: noteList.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: Icon(Icons.message),
-                  title: Text('${noteList[index]}'),
-                );
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Home'),
+          actions: [
+            IconButton(
+              icon:Icon(Icons.sync),
+              onPressed: (){
+                //getNotes();
+                getNoteStream();
               },
             ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(hintText: 'Enter Note'),
-                  onChanged: (text) {
-                    newNote = text;
-                  },
-                ),
-              ),
-              RaisedButton(
-                child: Text('Send'),
-                onPressed: () async {
-                  var user = await _auth.currentUser();
-                  var userId = user.uid;
-                  var timeStamp = DateTime.now().millisecondsSinceEpoch;
-                  _firestore.collection('Notes').add({
-                    'userId': '$userId',
-                    'note': newNote,
-                    'time': timeStamp
-                  });
-                  deleteNote();
+            IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: () {
+                _auth.signOut();
+                Navigator.pop(context);
+              },
+            )
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: noteList.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: Icon(Icons.message),
+                    title: Text('${noteList[index]}'),
+                  );
                 },
-              )
-            ],
-          )
-        ],
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(hintText: 'Enter Note'),
+                    onChanged: (text) {
+                      newNote = text;
+                    },
+                  ),
+                ),
+                RaisedButton(
+                  child: Text('Send'),
+                  onPressed: () async {
+                    var user = await _auth.currentUser();
+                    var userId = user.uid;
+                    var timeStamp = DateTime.now().millisecondsSinceEpoch;
+                    _firestore.collection('Notes').add({
+                      'userId': '$userId',
+                      'note': newNote,
+                      'time': timeStamp
+                    });
+                    deleteNote();
+                  },
+                )
+              ],
+            )
+          ],
+        ),
       ),
+      onWillPop: ()async{
+        return true;
+      },
     );
   }
 
@@ -125,4 +131,25 @@ class _HomeRouteState extends State<HomeRoute> {
   deleteNote(){
     dbReference.child('Notes').remove();
   }
+
+
+
+  getUser(username) async {
+    var noteSnapShot =
+    await _firestore.collection('Users').where('username',isEqualTo: username).getDocuments();
+    noteList = [];
+    var user = await _auth.currentUser();
+    var userId = user.uid;
+    noteSnapShot.documents.forEach((element) {
+      setState(() {
+
+        if(element.data['userId'] == userId){
+          noteList.add(element.data['note']);
+        }
+
+      });
+      print(element.data);
+    });
+  }
+  
 }

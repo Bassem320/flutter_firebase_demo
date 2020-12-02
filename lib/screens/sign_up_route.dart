@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_flutter_app/screens/home_route.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ class _SignUpRouteState extends State<SignUpRoute> {
   String email;
   String password;
   final _auth = FirebaseAuth.instance;
+  final _firestore = Firestore.instance;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,6 +50,14 @@ class _SignUpRouteState extends State<SignUpRoute> {
                try{
                  final authResult = await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password.trim());
                  if(authResult != null){
+                   var username;
+                   var user  =await  _auth.currentUser();
+                   var userId = user.uid;
+                   _firestore.collection('Users').add({
+                     'uid':userId,
+                     'username':username,
+                     'email':email
+                   });
                    Navigator.pushNamed(context, HomeRoute.home_route);
                  }
                }catch(e){
